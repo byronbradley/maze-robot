@@ -1,6 +1,6 @@
 # Autonomous Maze-Solving Robot
 
-Project period: Fall 2026.
+IEEE, University at Buffalo | Fall 2026.
 
 A step-by-step project for learning how a two-wheel robot senses walls and navigates a maze.
 
