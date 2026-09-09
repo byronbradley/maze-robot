@@ -62,6 +62,31 @@ def route_to_goal(maze, distances, start, goal):
     return route
 
 
+def movement_commands(route, initial_heading="east"):
+    """Translate adjacent route cells into idealized turns and forward moves.
+
+    Heading is updated after each planned turn. These are instructions only:
+    there is no feedback confirming real movement or wheel rotation.
+    """
+    headings = ("north", "east", "south", "west")
+    heading = headings.index(initial_heading)
+    direction_for_step = {(-1, 0): 0, (0, 1): 1, (1, 0): 2, (0, -1): 3}
+    commands = []
+    for current, target in zip(route, route[1:]):
+        step = (target[0] - current[0], target[1] - current[1])
+        if step not in direction_for_step:
+            raise ValueError("Route must move one adjacent cell at a time")
+        target_heading = direction_for_step[step]
+        turn = (target_heading - heading) % 4
+        if turn:
+            commands.append({1: "Turn right 90 degrees",
+                             2: "Turn around 180 degrees",
+                             3: "Turn left 90 degrees"}[turn])
+        heading = target_heading
+        commands.append(f"Drive forward one cell to {target}, facing {headings[heading]}")
+    return commands
+
+
 def main():
     start, goal = find(MAZE, "S"), find(MAZE, "G")
     distances = flood_fill(MAZE, goal)
@@ -81,6 +106,10 @@ def main():
     print(f"\nReached the goal in {len(route) - 1} moves.")
     print("Coordinates (row, column), starting from zero:")
     print(" -> ".join(map(str, route)))
+    print("\nPLANNED MOVEMENT COMMANDS (starting heading: east)")
+    for number, command in enumerate(movement_commands(route), start=1):
+        print(f"{number:2}. {command}")
+    print("\nThese are simulated commands, not verified physical movements.")
 
 
 if __name__ == "__main__":
