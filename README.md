@@ -6,7 +6,13 @@ A step-by-step project for learning how a two-wheel robot senses walls and navig
 
 ## Current status
 
-This repository reconstructs and documents an earlier robot project. The original code and test data are unavailable. It currently contains a learning plan; reconstructed hardware integration and maze navigation have not been implemented or verified here.
+This repository reconstructs and documents an earlier robot project. The original code and test data are unavailable. It includes a runnable Python demonstration of flood-fill route planning and heading-based movement commands. Hardware integration and physical navigation have not been verified here.
+
+## Run the simulation
+
+With Python 3 installed, run `python maze_sim.py`.
+
+The program prints the known maze, shortest distances to the goal, the selected route, and turn/forward commands assuming the robot initially faces east. It uses a complete map and idealized cell movements; it does not simulate sensor-based exploration, motor physics, or movement feedback.
 
 ## Learning plan
 
