@@ -1,4 +1,4 @@
-from main import robot_maze, is_open, move_right, move_left, move_down, move_up
+from main import robot_maze, is_open, move_right, move_left, move_down, move_up, get_neighbors
 def check_movement():
     assert move_down(robot_maze, 0, 1) == 1
     assert move_down(robot_maze,0,0) == 0
@@ -18,6 +18,8 @@ def check_movement():
 
     assert is_open(robot_maze,0,0)
     assert not is_open(robot_maze,0,2)
+
+    assert get_neighbors(robot_maze, 2, 1) == [(2, 2), (2, 0), (1, 1)]
 
     print("All movement tests passed.")
 
