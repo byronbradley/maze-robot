@@ -1,11 +1,12 @@
 """Flood-fill demonstration with a known maze. No physical hardware required.
 
 Run: python maze_sim.py
-This plans a route through a complete map; it does not simulate sensors,
-motor movement, or exploration of an unknown maze.
+Includes a known-map reference and exploration using idealized wall sensors.
+It does not model motor physics or real ultrasonic measurements.
 """
 
 from collections import deque
+from exploration import SimulatedWorld, explore, render_discovered
 
 # # = wall, . = open cell, S = start, G = goal.
 MAZE = (
@@ -110,6 +111,12 @@ def main():
     for number, command in enumerate(movement_commands(route), start=1):
         print(f"{number:2}. {command}")
     print("\nThese are simulated commands, not verified physical movements.")
+    print("\nUNKNOWN-MAZE EXPLORATION (only dimensions and goal initially known)")
+    explored_route, log, discovered = explore(SimulatedWorld(MAZE), start, goal)
+    print("\n".join(log))
+    print(f"\nReached goal after {len(explored_route) - 1} exploration moves.")
+    print("DISCOVERED MAP: R=robot, S=start, .=visited, ?=unknown, #=wall")
+    print(render_discovered(discovered, set(explored_route), start, goal, goal))
 
 
 if __name__ == "__main__":
