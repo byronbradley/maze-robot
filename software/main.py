@@ -66,6 +66,36 @@ def get_neighbors(maze, row, column):
         neighbors.append((next_row,column))
     return neighbors
 
+def find_path(maze, start, goal):
+    queue = [start]
+    visited = {start}
+    came_from = {}
+
+    while queue:
+        current = queue.pop(0)
+        if current == goal:
+            break
+
+        row, column = current
+        for neighbor in get_neighbors(maze, row, column):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                came_from[neighbor] = current
+                queue.append(neighbor)
+
+    if goal not in visited:
+        return []
+
+    path = [goal]
+    current = goal
+
+    while current != start:
+        current = came_from[current]
+        path.append(current)
+
+    path.reverse()
+    return path
+
 def main():
     robot_row = 0
     robot_column = 0
@@ -101,6 +131,18 @@ def main():
     print("Neighbors of start:", get_neighbors(robot_maze, 0, 0))
     print("Neighbors of middle:", get_neighbors(robot_maze, 2, 2))
     print("Neighbors of corridor:", get_neighbors(robot_maze, 1, 1))
+
+    path = find_path(robot_maze, (0, 0), goal)
+
+    if path:
+        print("Path from start to goal:", path)
+
+        for row, column in path:
+            print("Robot at:", row, column)
+            display_maze(robot_maze, row, column, goal_row, goal_column)
+            print()
+    else:
+        print("No route to the goal.")
 
 if __name__ == "__main__":
     main()
