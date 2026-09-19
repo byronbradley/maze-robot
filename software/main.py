@@ -67,6 +67,15 @@ def get_neighbors(maze, row, column):
     return neighbors
 
 def find_path(maze, start, goal):
+    start_row, start_column = start
+
+    if start_row < 0 or start_row >= len(maze):
+        return []
+    if start_column < 0 or start_column >= len(maze[start_row]):
+        return []
+
+    if not is_open(maze,start_row,start_column):
+        return []
     queue = [start]
     visited = {start}
     came_from = {}

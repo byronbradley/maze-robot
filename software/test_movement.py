@@ -24,9 +24,15 @@ def check_movement():
     small_maze = [[0, 0, 0]]
     assert find_path(small_maze,(0,0),(0,2)) == [(0,0),(0,1),(0,2)]
     assert find_path(small_maze,(0,0),(0,0)) == [(0,0)]
+    assert find_path(small_maze, (1, 0), (0, 2)) == []
+    assert find_path(small_maze, (-1, 0), (0, 2)) == []
+    assert find_path(small_maze, (0, -1), (0, 2)) == []
+    assert find_path(small_maze, (0, 3), (0, 2)) == []
 
     blocked_maze = [[0, 1, 0]]
     assert find_path(blocked_maze, (0,0),(0,2)) == []
+    assert find_path(blocked_maze, (0, 1), (0, 2)) == []
+    assert find_path(blocked_maze, (0, 0), (0, 1)) == []
 
 
     print("All movement tests passed.")
