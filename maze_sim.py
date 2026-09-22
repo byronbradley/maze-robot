@@ -7,6 +7,7 @@ It does not model motor physics or real ultrasonic measurements.
 
 from collections import deque
 from exploration import SimulatedWorld, explore, render_discovered
+from wall_following import demo as wall_following_demo
 
 # # = wall, . = open cell, S = start, G = goal.
 MAZE = (
@@ -117,6 +118,7 @@ def main():
     print(f"\nReached goal after {len(explored_route) - 1} exploration moves.")
     print("DISCOVERED MAP: R=robot, S=start, .=visited, ?=unknown, #=wall")
     print(render_discovered(discovered, set(explored_route), start, goal, goal))
+    wall_following_demo()
 
 
 if __name__ == "__main__":
