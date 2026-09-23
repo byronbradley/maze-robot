@@ -20,6 +20,16 @@ The simulator assumes perfect cell positioning, turns, and wall detection. It do
 
 Run checks with `python -m unittest test_exploration.py`.
 
+## Drift and wall following
+
+`python wall_following.py` compares open-loop driving with feedback in a straight 30 cm corridor. A 10 cm wide robot starts 3 cm left of center, with the left motor producing 94% of its commanded speed. The model integrates differential-drive heading and position, limits motor commands, and detects side-wall contact.
+
+The controller uses the difference between ideal left/right wall ranges to steer toward the center, plus heading feedback to damp oscillation. Commands are requested wheel speeds in meters per second, not PWM duty cycles. Hardware would need a measured speed-to-PWM relationship and a source of heading feedback.
+
+This experiment also runs at the end of `maze_sim.py`. It is separate from the grid explorer: grid moves still assume perfect motion. The corridor model excludes intersections, sensor noise, wheel slip, and motor dynamics. Ideal wall ranges are measured perpendicular to the corridor, rather than ray-cast from rotated ultrasonic sensors.
+
+Run all checks with `python -m unittest discover`.
+
 ## Learning plan
 
 1. Understand differential-drive movement: straight motion, curves, and turns.
