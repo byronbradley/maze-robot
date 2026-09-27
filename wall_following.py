@@ -6,13 +6,26 @@ This is a separate continuous-motion experiment, not the grid explorer's physics
 import math
 
 
+def motor_commands(left_distance, right_distance, heading):
+    """Return bounded wheel-speed requests; stop on missing/invalid ranges."""
+    if any(value is None or not math.isfinite(value) or value < 0
+           for value in (left_distance, right_distance)):
+        return 0.0, 0.0
+    if not math.isfinite(heading):
+        return 0.0, 0.0
+    base_speed, max_speed = 0.12, 0.20
+    kp, kd = 2.0, 0.6
+    error = right_distance - left_distance
+    correction = kp * error + kd * heading
+    return (max(0.0, min(max_speed, base_speed + correction)),
+            max(0.0, min(max_speed, base_speed - correction)))
+
+
 def simulate(wall_following=True, duration=8.0, dt=0.01,
              left_gain=0.94, right_gain=1.0, initial_offset=0.03,
-             corridor_width=0.30, robot_width=0.10):
+             corridor_width=0.30, robot_width=0.10, dropout_window=None):
     wheelbase = 0.10
-    base_speed, max_speed = 0.12, 0.20
-    # Heading feedback damps oscillation; side-distance feedback centers the robot.
-    kp, kd = 2.0, 0.6
+    base_speed = 0.12
     x, offset, heading = 0.0, initial_offset, 0.0
     history, collision = [], False
     clearance_limit = (corridor_width - robot_width) / 2
@@ -21,11 +34,13 @@ def simulate(wall_following=True, duration=8.0, dt=0.01,
     for step in range(math.ceil(duration / dt) + 1):
         left_distance = corridor_width / 2 - offset
         right_distance = corridor_width / 2 + offset
-        # Ideal side ranges are measured normal to the corridor walls.
-        error = right_distance - left_distance
-        correction = kp * error + kd * heading if wall_following else 0.0
-        left_command = max(0.0, min(max_speed, base_speed + correction))
-        right_command = max(0.0, min(max_speed, base_speed - correction))
+        # A half-open time interval simulates loss of the left sensor.
+        if dropout_window is not None and dropout_window[0] <= step * dt < dropout_window[1]:
+            left_distance = None
+        if wall_following:
+            left_command, right_command = motor_commands(left_distance, right_distance, heading)
+        else:
+            left_command = right_command = base_speed
         history.append(dict(time=step * dt, x=x, offset=offset, heading=heading,
                             left_distance=left_distance, right_distance=right_distance,
                             left_command=left_command, right_command=right_command))
@@ -62,6 +77,11 @@ def demo():
                 print(f"  {row['time']:6.2f}   {row['offset']*100:10.2f}"
                       f"   {row['left_command']:17.3f}   {row['right_command']:18.3f}")
     print("Model excludes intersections, range noise, wheel slip, and motor dynamics.")
+    history, collision = simulate(dropout_window=(2.0, 3.0))
+    stopped = [row for row in history if row['left_distance'] is None]
+    print(f"\nSENSOR DROPOUT: left sensor unavailable from 2.0 to 3.0 seconds.")
+    print(f"  Stopped for {len(stopped)} updates; resumed when readings returned.")
+    print(f"  Final offset: {history[-1]['offset'] * 100:.2f} cm; wall contact: {collision}")
 
 
 if __name__ == '__main__':
