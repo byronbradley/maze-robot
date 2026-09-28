@@ -34,6 +34,14 @@ def check_movement():
     assert find_path(blocked_maze, (0, 1), (0, 2)) == []
     assert find_path(blocked_maze, (0, 0), (0, 1)) == []
 
+    corner_maze = [
+        [0, 1],
+        [0, 0],
+    ]
+    assert find_path(corner_maze, (0,0),(1,1)) == [(0,0), (1,0), (1,1)]
+    assert find_path(corner_maze, (1, 1), (0, 0)) == [(1, 1), (1, 0), (0, 0)]
+
+
 
     print("All movement tests passed.")
 

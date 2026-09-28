@@ -112,44 +112,19 @@ def main():
     print("Before moving:")
     display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
 
-    robot_column = move_right(robot_maze, robot_row, robot_column)
-
-    print("After moving right:")
-    display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
-
-    robot_column = move_right(robot_maze, robot_row, robot_column)
-
-    print("After trying to move into the wall:")
-    display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
-
-    robot_row = move_down(robot_maze, robot_row, robot_column)
-
-    print("After moving down:")
-    display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
-
-    position = (robot_row, robot_column)
-    goal = (goal_row, goal_column)
-    print("Current position:",position)
-    print("Goal position:",goal)
-
-    if position == goal:
-        print("Goal reached!")
-    else:
-        print("Not at the goal yet.")
-
-    print("Neighbors of start:", get_neighbors(robot_maze, 0, 0))
-    print("Neighbors of middle:", get_neighbors(robot_maze, 2, 2))
-    print("Neighbors of corridor:", get_neighbors(robot_maze, 1, 1))
-
+    goal = (goal_row,goal_column)
     path = find_path(robot_maze, (0, 0), goal)
 
     if path:
         print("Path from start to goal:", path)
 
-        for row, column in path:
-            print("Robot at:", row, column)
-            display_maze(robot_maze, row, column, goal_row, goal_column)
+        for robot_row, robot_column in path:
+            print("Robot at:", robot_row, robot_column)
+            display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
             print()
+        print("Final position:", robot_row, robot_column)
+        if (robot_row,robot_column) == goal:
+            print("Goal reached!")
     else:
         print("No route to the goal.")
 
