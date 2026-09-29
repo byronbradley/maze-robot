@@ -30,6 +30,8 @@ This experiment also runs at the end of `maze_sim.py`. It is separate from the g
 
 Run all checks with `python -m unittest discover`.
 
+The corridor controller is isolated in `motor_commands()`. Missing, negative, or nonfinite wall ranges produce zero wheel commands. A demo drops the left sensor for one second, stops the simulated robot, and resumes when valid readings return. Stopping is instantaneous in this model; real braking distance and sensor-fault recovery require hardware testing. The feedback-off baseline intentionally does not use sensor readings.
+
 ## Learning plan
 
 1. Understand differential-drive movement: straight motion, curves, and turns.
