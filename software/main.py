@@ -105,6 +105,28 @@ def find_path(maze, start, goal):
     path.reverse()
     return path
 
+def get_direction(current, next_position):
+    current_row, current_column = current
+    next_row, next_column = next_position
+
+    if next_column == current_column + 1 and next_row == current_row:
+        return "right"
+    if next_column == current_column - 1 and next_row == current_row:
+        return "left"
+    if next_row == current_row + 1 and next_column == current_column:
+        return "down"
+    if next_row == current_row - 1 and next_column == current_column:
+        return "up"
+    return None
+
+def path_to_directions(path):
+    directions = []
+    for index in range(len(path)-1):
+        current = path[index]
+        next_position = path[index+1]
+        directions.append(get_direction(current, next_position))
+    return directions
+
 def main():
     robot_row = 0
     robot_column = 0
@@ -127,6 +149,9 @@ def main():
             print("Goal reached!")
     else:
         print("No route to the goal.")
+
+    directions = path_to_directions(path)
+    print("Directions:",directions)
 
 if __name__ == "__main__":
     main()
