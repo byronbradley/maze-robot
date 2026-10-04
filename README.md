@@ -20,7 +20,13 @@ The simulator assumes perfect cell positioning, turns, and wall detection. It do
 
 Run checks with `python -m unittest test_exploration.py`.
 
-## Drift and wall following
+## Visual exploration replay
+
+Open `visual_sim.html` in a browser. Play, pause, step, reset, change speed, or scrub through the exploration. Compare the discovered map with the actual maze and toggle flood-fill distances. The replay is generated from the Python explorer, not a second navigation implementation. The true maze is visible to the observer only.
+
+After changing the Python maze or explorer, run `python export_visual.py` to regenerate the standalone replay from `visual_template.html`. No server or network connection is required. GitHub's file viewer shows HTML source; download the files or clone the repository and open the generated HTML locally.
+
+## Corridor experiment
 
 `python wall_following.py` compares open-loop driving with feedback in a straight 30 cm corridor. A 10 cm wide robot starts 3 cm left of center, with the left motor producing 94% of its commanded speed. The model integrates differential-drive heading and position, limits motor commands, and detects side-wall contact.
 
