@@ -127,9 +127,35 @@ def path_to_directions(path):
         directions.append(get_direction(current, next_position))
     return directions
 
+def get_turn(heading, direction):
+    if heading == direction:
+        return "straight"
+    headings = ["up", "right", "down", "left"]
+    current_index = headings.index(heading)
+    target_index = headings.index(direction)
+    turn_steps = (target_index - current_index) % 4
+    if turn_steps == 1:
+        return "right"
+    if turn_steps == 2:
+        return "around"
+    if turn_steps == 3:
+        return "left"
+
+def directions_to_commands(directions, heading):
+    commands = []
+    for direction in directions:
+        turn = get_turn(heading, direction)
+        commands.append((turn, "forward"))
+        heading = direction
+    return commands
+
 def main():
     robot_row = 0
     robot_column = 0
+
+    heading = "right"
+    print("Starting heading:", heading)
+    print("Turn needed:", get_turn(heading, "right"))
 
     print("Before moving:")
     display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
@@ -152,6 +178,13 @@ def main():
 
     directions = path_to_directions(path)
     print("Directions:",directions)
+
+    commands = directions_to_commands(directions, heading)
+    print("Commands:", commands)
+
+    for turn, movement in commands:
+        print("Turn:", turn)
+        print("Move:", movement)
 
 if __name__ == "__main__":
     main()

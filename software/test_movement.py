@@ -1,5 +1,5 @@
 from main import (robot_maze, is_open, move_right, move_left, move_down, move_up, get_neighbors, find_path,
-                  get_direction, path_to_directions)
+                  get_direction, path_to_directions, get_turn, directions_to_commands)
 def check_movement():
     assert move_down(robot_maze, 0, 1) == 1
     assert move_down(robot_maze,0,0) == 0
@@ -54,8 +54,23 @@ def check_movement():
     assert path_to_directions(path) == ["right", "down"]
     assert path_to_directions([]) == []
     assert path_to_directions([(0, 0)]) == []
+
     square_path = [(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]
     assert path_to_directions(square_path) == ["right", "down", "left", "up"]
+
+    assert get_turn("right", "right") == "straight"
+    assert get_turn("right", "down") == "right"
+    assert get_turn("right", "left") == "around"
+    assert get_turn("right", "up") == "left"
+    assert get_turn("left", "up") == "right"
+
+    assert directions_to_commands(["right", "down"], "right") == [
+        ("straight", "forward"),
+        ("right", "forward"),]
+    assert directions_to_commands([], "right") == []
+    assert directions_to_commands(["up", "down"], "right") == [
+        ("left", "forward"),
+        ("around", "forward"),]
 
     print("All movement tests passed.")
 
