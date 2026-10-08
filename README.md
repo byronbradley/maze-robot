@@ -2,6 +2,8 @@
 
 IEEE, University at Buffalo | Fall 2026.
 
+**[Launch the visual simulation](https://byronbradley.github.io/maze-robot/)**
+
 A step-by-step project for learning how a two-wheel robot senses walls and navigates a maze.
 
 ## Current status
