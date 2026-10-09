@@ -149,6 +149,29 @@ def directions_to_commands(directions, heading):
         heading = direction
     return commands
 
+def apply_turn(heading, turn):
+    headings = ["up", "right", "down", "left"]
+    index = headings.index(heading)
+
+    if turn == "right":
+        index += 1
+    elif turn == "left":
+        index -= 1
+    elif turn == "around":
+        index += 2
+    return headings[index % 4]
+
+def move_forward(maze, row, column, heading):
+    if heading == "right":
+        column = move_right(maze, row, column)
+    elif heading == "left":
+        column = move_left(maze, row, column)
+    elif heading == "down":
+        row = move_down(maze, row, column)
+    elif heading == "up":
+        row = move_up(maze, row, column)
+    return row, column
+
 def main():
     robot_row = 0
     robot_column = 0
@@ -182,9 +205,18 @@ def main():
     commands = directions_to_commands(directions, heading)
     print("Commands:", commands)
 
+    robot_row = 0
+    robot_column = 0
+    heading = "right"
+
     for turn, movement in commands:
-        print("Turn:", turn)
-        print("Move:", movement)
+        heading = apply_turn(heading, turn)
+        robot_row, robot_column = move_forward(
+            robot_maze, robot_row, robot_column, heading)
+        print("Robot at:", robot_row, robot_column)
+        print("Facing:", heading)
+
+    print("Final position:", robot_row, robot_column)
 
 if __name__ == "__main__":
     main()

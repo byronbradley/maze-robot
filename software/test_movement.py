@@ -1,5 +1,5 @@
 from main import (robot_maze, is_open, move_right, move_left, move_down, move_up, get_neighbors, find_path,
-                  get_direction, path_to_directions, get_turn, directions_to_commands)
+                  get_direction, path_to_directions, get_turn, directions_to_commands, apply_turn, move_forward)
 def check_movement():
     assert move_down(robot_maze, 0, 1) == 1
     assert move_down(robot_maze,0,0) == 0
@@ -71,6 +71,32 @@ def check_movement():
     assert directions_to_commands(["up", "down"], "right") == [
         ("left", "forward"),
         ("around", "forward"),]
+
+    assert apply_turn("right", "straight") == "right"
+    assert apply_turn("right", "right") == "down"
+    assert apply_turn("right", "left") == "up"
+    assert apply_turn("right", "around") == "left"
+    assert apply_turn("left", "right") == "up"
+
+    assert move_forward(robot_maze, 0, 0, "right") == (0, 1)
+    assert move_forward(robot_maze, 0, 1, "down") == (1, 1)
+    assert move_forward(robot_maze, 1, 1, "up") == (0, 1)
+    assert move_forward(robot_maze, 0, 1, "left") == (0, 0)
+    assert move_forward(robot_maze, 0, 0, "down") == (0, 0)
+    assert move_forward(robot_maze, 0, 0, "up") == (0, 0)
+
+    row, column = 0, 0
+    heading = "right"
+    path = find_path(robot_maze, (0, 0), (4, 4))
+    directions = path_to_directions(path)
+    commands = directions_to_commands(directions, heading)
+
+    for turn, movement in commands:
+        heading = apply_turn(heading, turn)
+        row, column = move_forward(robot_maze, row, column, heading)
+
+    assert (row, column) == (4, 4)
+    assert heading == "down"
 
     print("All movement tests passed.")
 
