@@ -178,36 +178,19 @@ def main():
 
     heading = "right"
     print("Starting heading:", heading)
-    print("Turn needed:", get_turn(heading, "right"))
-
     print("Before moving:")
     display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
 
     goal = (goal_row,goal_column)
     path = find_path(robot_maze, (0, 0), goal)
 
-    if path:
-        print("Path from start to goal:", path)
-
-        for robot_row, robot_column in path:
-            print("Robot at:", robot_row, robot_column)
-            display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
-            print()
-        print("Final position:", robot_row, robot_column)
-        if (robot_row,robot_column) == goal:
-            print("Goal reached!")
-    else:
+    if not path:
         print("No route to the goal.")
+        return
+    print("Path from start to goal:", path)
 
     directions = path_to_directions(path)
-    print("Directions:",directions)
-
     commands = directions_to_commands(directions, heading)
-    print("Commands:", commands)
-
-    robot_row = 0
-    robot_column = 0
-    heading = "right"
 
     for turn, movement in commands:
         heading = apply_turn(heading, turn)
@@ -215,8 +198,12 @@ def main():
             robot_maze, robot_row, robot_column, heading)
         print("Robot at:", robot_row, robot_column)
         print("Facing:", heading)
+        display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
+        print()
 
     print("Final position:", robot_row, robot_column)
+    if (robot_row, robot_column) == goal:
+        print("Goal reached!")
 
 if __name__ == "__main__":
     main()
