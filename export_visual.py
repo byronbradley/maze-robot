@@ -36,8 +36,9 @@ def main():
     data = dict(maze=MAZE, start=start, goal=goal, frames=world.frames,
                 moves=len(route) - 1)
     template = (root / 'visual_template.html').read_text(encoding='utf-8')
-    (root / 'visual_sim.html').write_text(template.replace('/*REPLAY_DATA*/null',
-        json.dumps(data)), encoding='utf-8')
+    rendered = template.replace('/*REPLAY_DATA*/null', json.dumps(data))
+    for filename in ('visual_sim.html', 'index.html'):
+        (root / filename).write_text(rendered, encoding='utf-8')
     print(f'Exported {len(world.frames)} frames and {len(route)-1} moves to visual_sim.html')
 
 
