@@ -4,6 +4,16 @@ IEEE, University at Buffalo | Fall 2026.
 
 **[Launch the visual simulation](https://byronbradley.github.io/maze-robot/)**
 
+[![Tests](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml/badge.svg)](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml)
+
+![Maze exploration replay showing discovered and actual maps](docs/simulation-preview.png)
+
+## Project scope
+
+Completed: flood-fill planning, simulated wall discovery, heading-based movement commands, a browser replay, and a separate corridor feedback experiment with sensor dropout handling.
+
+Planned: verified Arduino firmware, electrical wiring, real sensor and motor integration, calibrated motion, and physical maze testing. See [the architecture notes](docs/architecture.md) for how the current modules work together and their limits.
+
 A step-by-step project for learning how a two-wheel robot senses walls and navigates a maze.
 
 ## Current status

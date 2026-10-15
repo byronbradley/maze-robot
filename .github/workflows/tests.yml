@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Run navigation and controller tests
+        run: python -m unittest discover -v
+      - name: Run complete simulation
+        run: python maze_sim.py
+      - name: Verify browser replay matches Python source
+        run: |
+          python export_visual.py
+          git diff --exit-code -- index.html visual_sim.html
