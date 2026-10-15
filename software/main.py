@@ -182,7 +182,8 @@ def main():
     display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
 
     goal = (goal_row,goal_column)
-    path = find_path(robot_maze, (0, 0), goal)
+    start = (robot_row, robot_column)
+    path = find_path(robot_maze, start, goal)
 
     if not path:
         print("No route to the goal.")
@@ -194,8 +195,12 @@ def main():
 
     for turn, movement in commands:
         heading = apply_turn(heading, turn)
+        previous_position = (robot_row, robot_column)
         robot_row, robot_column = move_forward(
             robot_maze, robot_row, robot_column, heading)
+        if (robot_row, robot_column) == previous_position:
+            print("Forward movement blocked. Stopping.")
+            break
         print("Robot at:", robot_row, robot_column)
         print("Facing:", heading)
         display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
