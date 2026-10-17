@@ -98,6 +98,21 @@ def check_movement():
     assert (row, column) == (4, 4)
     assert heading == "down"
 
+    two_routes_maze = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],]
+    assert find_path(two_routes_maze, (0, 0), (0, 2)) == [
+        (0, 0), (0, 1), (0, 2)]
+
+    two_routes_maze[0][1] = 1
+    assert find_path(two_routes_maze, (0, 0), (0, 2)) == [
+        (0, 0), (1, 0), (2, 0), (2, 1),
+        (2, 2), (1, 2), (0, 2)]
+
+    two_routes_maze[1][0] = 1
+    assert find_path(two_routes_maze, (0, 0), (0, 2)) == []
+
     print("All movement tests passed.")
 
 if __name__ == "__main__":
