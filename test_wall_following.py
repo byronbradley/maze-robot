@@ -8,6 +8,13 @@ class WallFollowingTests(unittest.TestCase):
             self.assertEqual(motor_commands(invalid, 0.10, 0), (0, 0))
             self.assertEqual(motor_commands(0.10, invalid, 0), (0, 0))
 
+    def test_missing_heading_stops_then_recovers(self):
+        for heading in (None, float('nan'), float('inf'), -float('inf')):
+            with self.subTest(heading=heading):
+                self.assertEqual(motor_commands(0.15, 0.15, heading), (0, 0))
+        # A lost heading sample must not prevent the next valid update.
+        self.assertEqual(motor_commands(0.15, 0.15, 0.0), (0.12, 0.12))
+
     def test_dropout_stops_position_and_resumes(self):
         history, hit = simulate(dropout_window=(2.0, 3.0))
         dropout = [row for row in history if 2.0 <= row['time'] < 3.0]
