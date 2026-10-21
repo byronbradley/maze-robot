@@ -172,6 +172,19 @@ def move_forward(maze, row, column, heading):
         row = move_up(maze, row, column)
     return row, column
 
+def follow_commands(maze, start, heading, commands):
+    row, column = start
+
+    for turn, movement in commands:
+        heading = apply_turn(heading, turn)
+        previous_position = (row, column)
+        row, column = move_forward(maze, row, column, heading)
+
+        if (row, column) == previous_position:
+            break
+
+    return (row, column), heading
+
 def main():
     robot_row = 0
     robot_column = 0
