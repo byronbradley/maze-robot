@@ -206,22 +206,18 @@ def main():
     directions = path_to_directions(path)
     commands = directions_to_commands(directions, heading)
 
-    for turn, movement in commands:
-        heading = apply_turn(heading, turn)
-        previous_position = (robot_row, robot_column)
-        robot_row, robot_column = move_forward(
-            robot_maze, robot_row, robot_column, heading)
-        if (robot_row, robot_column) == previous_position:
-            print("Forward movement blocked. Stopping.")
-            break
-        print("Robot at:", robot_row, robot_column)
-        print("Facing:", heading)
-        display_maze(robot_maze, robot_row, robot_column, goal_row, goal_column)
-        print()
+    position, heading = follow_commands(
+        robot_maze, start, heading, commands)
+    robot_row, robot_column = position
+    display_maze(
+        robot_maze, robot_row, robot_column, goal_row, goal_column)
 
+    print("Final heading:", heading)
     print("Final position:", robot_row, robot_column)
     if (robot_row, robot_column) == goal:
         print("Goal reached!")
+    else:
+        print("Stopped before reaching the goal.")
 
 if __name__ == "__main__":
     main()
