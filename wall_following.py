@@ -7,11 +7,11 @@ import math
 
 
 def motor_commands(left_distance, right_distance, heading):
-    """Return bounded wheel-speed requests; stop on missing/invalid ranges."""
+    """Return bounded wheel speeds; stop on missing ranges or heading."""
     if any(value is None or not math.isfinite(value) or value < 0
            for value in (left_distance, right_distance)):
         return 0.0, 0.0
-    if not math.isfinite(heading):
+    if heading is None or not math.isfinite(heading):
         return 0.0, 0.0
     base_speed, max_speed = 0.12, 0.20
     kp, kd = 2.0, 0.6
