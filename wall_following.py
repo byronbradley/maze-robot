@@ -32,30 +32,33 @@ def simulate(wall_following=True, duration=8.0, dt=0.01,
     if dt <= 0 or duration <= 0 or clearance_limit <= 0:
         raise ValueError("Time and corridor clearance must be positive")
     for step in range(math.ceil(duration / dt) + 1):
+        elapsed = min(step * dt, duration)
         left_distance = corridor_width / 2 - offset
         right_distance = corridor_width / 2 + offset
         # A half-open time interval simulates loss of the left sensor.
-        if dropout_window is not None and dropout_window[0] <= step * dt < dropout_window[1]:
+        if dropout_window is not None and dropout_window[0] <= elapsed < dropout_window[1]:
             left_distance = None
         if wall_following:
             left_command, right_command = motor_commands(left_distance, right_distance, heading)
         else:
             left_command = right_command = base_speed
-        history.append(dict(time=step * dt, x=x, offset=offset, heading=heading,
+        history.append(dict(time=elapsed, x=x, offset=offset, heading=heading,
                             left_distance=left_distance, right_distance=right_distance,
                             left_command=left_command, right_command=right_command))
         if abs(offset) >= clearance_limit:
             collision = True
             break
-        if step == math.ceil(duration / dt):
+        if elapsed >= duration:
             break
+        # The last step may be shorter than dt.
+        step_dt = min(dt, duration - elapsed)
         left_speed = left_command * left_gain
         right_speed = right_command * right_gain
         speed = (left_speed + right_speed) / 2
         angular_speed = (right_speed - left_speed) / wheelbase
-        x += speed * math.cos(heading) * dt
-        offset += speed * math.sin(heading) * dt
-        heading += angular_speed * dt
+        x += speed * math.cos(heading) * step_dt
+        offset += speed * math.sin(heading) * step_dt
+        heading += angular_speed * step_dt
     return history, collision
 
 

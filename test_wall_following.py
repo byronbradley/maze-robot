@@ -15,6 +15,18 @@ class WallFollowingTests(unittest.TestCase):
         # A lost heading sample must not prevent the next valid update.
         self.assertEqual(motor_commands(0.15, 0.15, 0.0), (0.12, 0.12))
 
+    def test_simulation_ends_at_requested_duration(self):
+        for duration, dt in ((0.025, 0.01), (0.005, 0.01),
+                             (0.03, 0.01), (0.07, 0.01)):
+            with self.subTest(duration=duration, dt=dt):
+                history, hit = simulate(False, duration=duration, dt=dt,
+                                        left_gain=1.0, initial_offset=0.0)
+                self.assertFalse(hit)
+                self.assertEqual(history[-1]['time'], duration)
+                self.assertAlmostEqual(history[-1]['x'], 0.12 * duration)
+                self.assertTrue(all(a['time'] < b['time'] <= duration
+                                    for a, b in zip(history, history[1:])))
+
     def test_dropout_stops_position_and_resumes(self):
         history, hit = simulate(dropout_window=(2.0, 3.0))
         dropout = [row for row in history if 2.0 <= row['time'] < 3.0]
