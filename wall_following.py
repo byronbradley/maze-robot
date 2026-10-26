@@ -24,13 +24,21 @@ def motor_commands(left_distance, right_distance, heading):
 def simulate(wall_following=True, duration=8.0, dt=0.01,
              left_gain=0.94, right_gain=1.0, initial_offset=0.03,
              corridor_width=0.30, robot_width=0.10, dropout_window=None):
+    for name, value in (('duration', duration), ('dt', dt),
+                        ('left_gain', left_gain), ('right_gain', right_gain),
+                        ('initial_offset', initial_offset),
+                        ('corridor_width', corridor_width), ('robot_width', robot_width)):
+        if not math.isfinite(value):
+            raise ValueError(f'{name} must be finite')
+    if dt <= 0 or duration <= 0:
+        raise ValueError('duration and dt must be positive')
+    if robot_width <= 0 or corridor_width <= robot_width:
+        raise ValueError('Corridor width must exceed a positive robot width')
     wheelbase = 0.10
     base_speed = 0.12
     x, offset, heading = 0.0, initial_offset, 0.0
     history, collision = [], False
     clearance_limit = (corridor_width - robot_width) / 2
-    if dt <= 0 or duration <= 0 or clearance_limit <= 0:
-        raise ValueError("Time and corridor clearance must be positive")
     for step in range(math.ceil(duration / dt) + 1):
         elapsed = min(step * dt, duration)
         left_distance = corridor_width / 2 - offset

@@ -27,6 +27,25 @@ class WallFollowingTests(unittest.TestCase):
                 self.assertTrue(all(a['time'] < b['time'] <= duration
                                     for a, b in zip(history, history[1:])))
 
+    def test_nonfinite_settings_are_rejected(self):
+        for name in ('duration', 'dt', 'left_gain', 'right_gain',
+                     'initial_offset', 'corridor_width', 'robot_width'):
+            for value in (float('nan'), float('inf'), -float('inf')):
+                with self.subTest(name=name, value=value):
+                    settings = dict(duration=0.03)
+                    settings[name] = value
+                    with self.assertRaisesRegex(ValueError, name):
+                        simulate(**settings)
+
+    def test_invalid_dimensions_and_time_are_rejected(self):
+        for settings in ({'robot_width': -0.1}, {'robot_width': 0.0},
+                         {'corridor_width': 0.0}, {'robot_width': 0.30},
+                         {'dt': 0.0}, {'dt': -0.01},
+                         {'duration': 0.0}, {'duration': -1.0}):
+            with self.subTest(settings=settings):
+                with self.assertRaises(ValueError):
+                    simulate(**settings)
+
     def test_dropout_stops_position_and_resumes(self):
         history, hit = simulate(dropout_window=(2.0, 3.0))
         dropout = [row for row in history if 2.0 <= row['time'] < 3.0]
