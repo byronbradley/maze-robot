@@ -1,4 +1,4 @@
-"""Ideal cell-based sensing and online flood-fill exploration."""
+"""Flood-fill exploration with simulated wall sensors."""
 
 from collections import deque
 
@@ -12,15 +12,16 @@ def adjacent(cell, direction):
 
 
 class DiscoveredMap:
-    """Known dimensions and boundary; interior passage states start unknown.
+    """Walls found so far, including the maze boundary.
 
-    Edges are stored in both directions: True = wall, False = open.
-    Missing edges mean unknown and are tentatively open for planning.
+    True means wall, False means open, and a missing entry means unknown.
+    Each edge is stored from both cells. Planning treats unknown edges as open.
     """
 
     def __init__(self, height, width):
-        self.cells = {(r, c) for r in range(1, height - 1)
-                      for c in range(1, width - 1)}
+        if height < 3 or width < 3:
+            raise ValueError("Map must be at least 3 by 3, including the boundary")
+        self.cells = {(r, c) for r in range(1, height - 1) for c in range(1, width - 1)}
         self.walls = {}
 
     def record(self, cell, direction, wall):
@@ -47,11 +48,13 @@ class DiscoveredMap:
 
 
 class SimulatedWorld:
-    """Only this component reads the true wall layout."""
+    """Read walls and check moves against the actual maze."""
 
     def __init__(self, maze):
         if not maze or len({len(row) for row in maze}) != 1:
             raise ValueError("Maze must be a nonempty rectangle")
+        if len(maze) < 3 or len(maze[0]) < 3:
+            raise ValueError("Maze must be at least 3 by 3, including the boundary")
         if any(value != "#" for value in maze[0] + maze[-1]):
             raise ValueError("Maze needs a closed outer boundary")
         if any(row[0] != "#" or row[-1] != "#" for row in maze):
@@ -81,24 +84,36 @@ def explore(world, start, goal, initial_heading=1, max_cycles=10000):
         readings = world.sense(position, heading)
         for _, direction, wall in readings:
             discovered.record(position, direction, wall)
-        log.append(f"At {position}, facing {NAMES[heading]}: " + ", ".join(
-            f"{label}={'wall' if wall else 'open'}" for label, _, wall in readings))
+        log.append(
+            f"At {position}, facing {NAMES[heading]}: "
+            + ", ".join(
+                f"{label}={'wall' if wall else 'open'}" for label, _, wall in readings
+            )
+        )
         if position == goal:
             return route, log, discovered
         distances = discovered.distances(goal)
         if position not in distances:
             raise ValueError("Goal unreachable according to discovered walls")
-        choices = [d for d in range(4)
-                   if discovered.state(position, d) is not True
-                   and distances.get(adjacent(position, d)) == distances[position] - 1]
-        # Prefer continuing straight when shortest-distance choices tie.
+        choices = [
+            d
+            for d in range(4)
+            if discovered.state(position, d) is not True
+            and distances.get(adjacent(position, d)) == distances[position] - 1
+        ]
+        # Keep going straight when two routes are equally short.
         direction = heading if heading in choices else choices[0]
         turn = (direction - heading) % 4
         if turn:
-            log.append({1: "Turn right 90 degrees", 2: "Turn around 180 degrees",
-                        3: "Turn left 90 degrees"}[turn])
+            log.append(
+                {
+                    1: "Turn right 90 degrees",
+                    2: "Turn around 180 degrees",
+                    3: "Turn left 90 degrees",
+                }[turn]
+            )
             heading = direction
-            # Re-sense after turning, including a previously unseen rear passage.
+            # A turn can bring an unseen passage into view.
             continue
         if discovered.state(position, heading) is not False:
             raise RuntimeError("Refusing to enter an unconfirmed passage")
@@ -109,19 +124,27 @@ def explore(world, start, goal, initial_heading=1, max_cycles=10000):
 
 
 def render_discovered(discovered, visited, start, goal, position):
-    """Draw known edges without reading the world's hidden maze."""
+    """Draw the discovered map, marking unseen passages with question marks."""
     height = max(r for r, _ in discovered.cells)
     width = max(c for _, c in discovered.cells)
-    drawing = [[" " for _ in range(width * 2 + 1)]
-               for _ in range(height * 2 + 1)]
+    drawing = [[" " for _ in range(width * 2 + 1)] for _ in range(height * 2 + 1)]
     for cell in sorted(discovered.cells):
         r, c = cell
         y, x = 2 * r - 1, 2 * c - 1
-        drawing[y][x] = "R" if cell == position else "S" if cell == start else (
-            "G" if cell == goal else "." if cell in visited else "?")
+        drawing[y][x] = (
+            "R"
+            if cell == position
+            else (
+                "S"
+                if cell == start
+                else ("G" if cell == goal else "." if cell in visited else "?")
+            )
+        )
         for direction, (dr, dc) in enumerate(DIRECTIONS):
             state = discovered.state(cell, direction)
-            drawing[y + dr][x + dc] = "#" if state is True else " " if state is False else "?"
+            drawing[y + dr][x + dc] = (
+                "#" if state is True else " " if state is False else "?"
+            )
     for y in range(0, len(drawing), 2):
         for x in range(0, len(drawing[0]), 2):
             drawing[y][x] = "+"

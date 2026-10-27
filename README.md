@@ -1,69 +1,63 @@
-# Autonomous Maze-Solving Robot
+# Maze robot
 
 IEEE, University at Buffalo | Fall 2026.
 
-**[Launch the visual simulation](https://byronbradley.github.io/maze-robot/)**
+[Open the replay](https://byronbradley.github.io/maze-robot/)
 
 [![Tests](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml/badge.svg)](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml)
 
-![Maze exploration replay showing discovered and actual maps](docs/simulation-preview.png)
+![The robot's map beside the actual maze](docs/simulation-preview.png)
 
-## Project scope
+This project simulates a robot exploring a maze and following corridor walls. The code has not been tested on a physical robot.
 
-Completed: flood-fill planning, simulated wall discovery, heading-based movement commands, a browser replay, and a separate corridor feedback experiment with sensor dropout handling.
+It includes a flood-fill planner, wall sensing, turn and forward commands, a browser replay, and a separate test of corridor following. [How the code fits together](docs/architecture.md) covers the files and their limits.
 
-Planned: verified Arduino firmware, electrical wiring, real sensor and motor integration, calibrated motion, and physical maze testing. See [the architecture notes](docs/architecture.md) for how the current modules work together and their limits.
+## Run it
 
-A step-by-step project for learning how a two-wheel robot senses walls and navigates a maze.
+Use Python 3.12. No extra packages are needed.
 
-## Current status
+```sh
+python maze_sim.py
+python -m unittest discover -v
+```
 
-This repository reconstructs and documents an earlier robot project. The original code and test data are unavailable. It includes a runnable Python demonstration of flood-fill route planning and heading-based movement commands. Hardware integration and physical navigation have not been verified here.
+The demo first solves the maze with the full map available. It then explores the same maze using wall readings and finishes with the corridor test.
 
-## Run the simulation
+## Maze exploration
 
-With Python 3 installed, run `python maze_sim.py`.
+The robot starts with the maze dimensions, outer boundary, starting position and heading, and goal coordinates. It reads walls in front, to the left, and to the right. Each reading updates the passage from both neighboring cells.
 
-The program first prints a known-map reference route and movement commands. It then runs unknown-maze exploration with a separate discovered map. Only maze dimensions, the closed boundary, the starting pose, and goal coordinates are initially known to the robot.
+The planner treats unseen passages as open. Before moving, the robot turns and checks that the next passage is clear. It recalculates distances after each reading and stops with an error if the goal is unreachable. Question marks in the final map show what it never saw.
 
-Ideal front/left/right sensors report whether adjacent passages are blocked. Observations update both sides of each passage. Unknown passages are tentatively open for flood-fill planning, but the robot turns and senses before entering one. It recalculates distances after sensing and stops with an error if the goal becomes unreachable. The final discovered map retains question marks for unseen passages and cells.
+Positions, turns, and wall readings are exact in this model. There is no sensor noise, wheel slip, or motor feedback. The route found while exploring is not always the shortest route through the actual maze.
 
-The simulator assumes perfect cell positioning, turns, and wall detection. It does not model ultrasonic echo times, sensor noise, motor physics, or physical movement feedback. An exploration route is not guaranteed to be the true shortest route.
+## Browser replay
 
-Run checks with `python -m unittest test_exploration.py`.
+Open `visual_sim.html` in a browser, or use the link above. You can play, pause, step, reset, change speed, and drag the slider through the run. The two panels show the robot's map and the actual maze. The robot only uses its own map.
 
-## Visual exploration replay
+The replay uses frames recorded by the Python explorer. After changing the maze, explorer, or page template, rebuild it with:
 
-Open `visual_sim.html` in a browser. Play, pause, step, reset, change speed, or scrub through the exploration. Compare the discovered map with the actual maze and toggle flood-fill distances. The replay is generated from the Python explorer, not a second navigation implementation. The true maze is visible to the observer only.
+```sh
+python export_visual.py
+```
 
-After changing the Python maze or explorer, run `python export_visual.py` to regenerate the standalone replay from `visual_template.html`. No server or network connection is required. GitHub's file viewer shows HTML source; download the files or clone the repository and open the generated HTML locally.
+This writes `visual_sim.html` and `index.html` from `visual_template.html`. Both files work offline. GitHub's file viewer shows the HTML source, so download or clone the repo to open them locally.
 
 ## Corridor experiment
 
-`python wall_following.py` compares open-loop driving with feedback in a straight 30 cm corridor. A 10 cm wide robot starts 3 cm left of center, with the left motor producing 94% of its commanded speed. The model integrates differential-drive heading and position, limits motor commands, and detects side-wall contact.
+Run `python wall_following.py` to compare driving with and without feedback. A 10 cm wide robot starts 3 cm left of center in a 30 cm corridor. Its left motor runs at 94% of the requested speed. The model updates position and heading, limits wheel speeds, and checks for side-wall contact.
 
-The controller uses the difference between ideal left/right wall ranges to steer toward the center, plus heading feedback to damp oscillation. Commands are requested wheel speeds in meters per second, not PWM duty cycles. Hardware would need a measured speed-to-PWM relationship and a source of heading feedback.
+The controller uses the difference between left and right wall distances to steer toward the center. Heading feedback reduces the back-and-forth motion. Commands are wheel speeds in meters per second. Real hardware would need a way to measure heading and convert those speeds to PWM.
 
-This experiment also runs at the end of `maze_sim.py`. It is separate from the grid explorer: grid moves still assume perfect motion. The corridor model excludes intersections, sensor noise, wheel slip, and motor dynamics. Ideal wall ranges are measured perpendicular to the corridor, rather than ray-cast from rotated ultrasonic sensors.
+Missing or invalid distance or heading readings stop the wheel commands. The demo drops the left sensor for one second, then resumes when readings return. Stopping is instant in this model. The feedback-off run ignores sensor readings.
 
-Run all checks with `python -m unittest discover`.
+This test runs separately from maze navigation. It leaves out intersections, range noise, wheel slip, motor response delays, and braking distance. Wall distances are measured perpendicular to the corridor, rather than along a turned sensor's beam.
 
-The corridor controller is isolated in `motor_commands()`. Missing, negative, or nonfinite wall ranges produce zero wheel commands. A demo drops the left sensor for one second, stops the simulated robot, and resumes when valid readings return. Stopping is instantaneous in this model; real braking distance and sensor-fault recovery require hardware testing. The feedback-off baseline intentionally does not use sensor readings.
+## Still to do
 
-## Learning plan
+- Connect maze navigation to movement feedback and controlled turns.
+- Verify the firmware, wiring, sensors, and motor driver on real hardware.
+- Measure wheel speed, stopping distance, and sensor errors.
+- Test the robot in a physical maze and save the results.
 
-1. Understand differential-drive movement: straight motion, curves, and turns.
-2. Learn motor direction control with an H-bridge and speed control with PWM.
-3. Measure wall distance and handle invalid sensor readings.
-4. Implement and test stopping and corridor following.
-5. Represent maze cells and walls in software.
-6. Implement flood-fill route planning in a simulation.
-7. Integrate with hardware and document measured results.
-
-## Hardware planning
-
-Potential components include an Arduino Nano 33 BLE, a DRV8833 motor driver, two geared DC motors, wall-distance sensors, a chassis, and a suitable battery. These are planned components, not a record of completed assembly. Exact electrical compatibility and wiring must be checked before powering hardware.
-
-## Documentation standard
-
-Record what was built, what was tested, the observed results, and remaining limitations. Identify simulations separately from physical robot tests. If earlier project files are added, describe their source and original dates accurately.
+Possible parts include an Arduino Nano 33 BLE, a DRV8833 driver, two geared DC motors, wall-distance sensors, a chassis, and a battery. This is a parts plan; the assembly and electrical compatibility have not been checked here.

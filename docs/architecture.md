@@ -1,31 +1,31 @@
-# How the simulation fits together
+# How the code fits together
 
 ## Navigation
 
-`maze_sim.py` defines the example maze and runs both a known-map reference and unknown-map exploration. `exploration.py` separates the simulated environment from the robot's knowledge:
+`maze_sim.py` holds the example maze. It first solves it with the full map, then runs the explorer with only wall readings. The explorer lives in `exploration.py`:
 
-- `SimulatedWorld` reads the actual maze to produce ideal front, left, and right wall observations. It rejects moves into a wall.
-- `DiscoveredMap` starts with known dimensions and boundary walls. Interior passages are unknown until observed. Each observation updates the two neighboring cells consistently.
-- `explore()` records observations, recalculates flood-fill distances, chooses an adjacent cell toward the goal, and issues a discrete turn or forward move. It senses again after turning before proceeding.
+- `SimulatedWorld` reads the actual maze and returns front, left, and right wall readings. It blocks moves into walls.
+- `DiscoveredMap` stores what the robot has seen. It starts with the maze dimensions and outer boundary. Each wall reading updates both sides of a passage.
+- `explore()` records readings, recalculates distances, and picks a turn or forward move. After turning, it checks the sensors again before moving.
 
-Unknown edges are tentatively open during planning. Movement requires a confirmed open passage. The goal's location and robot's starting pose are supplied; the robot does not have to discover or estimate them.
+Planning treats unknown passages as open, but the robot must check before entering one. The starting position, heading, and goal are supplied. Position and wall readings are exact.
 
 ## Browser replay
 
-`export_visual.py` records the same explorer's observations and map states. It embeds those frames into `visual_template.html`, producing identical `index.html` and `visual_sim.html` files. GitHub Pages serves `index.html`.
+`export_visual.py` records the explorer's readings and maps, then puts those frames into `visual_template.html`. It writes the same page to `index.html` and `visual_sim.html`. GitHub Pages serves `index.html`; either file can be opened offline.
 
-The browser plays a recorded trace. Playback speed changes the display timing, not the Python controller or robot dynamics. The true-map panel is for the observer; the planner uses the discovered map only.
+The browser plays back that recording. Changing playback speed only changes how fast frames appear. The actual-maze panel lets the viewer compare maps; the planner cannot read it.
 
 ## Corridor feedback
 
-`wall_following.py` is a separate continuous-motion experiment. Requested wheel speeds pass through unequal motor gains. Differential-drive equations update heading and position. Side-distance error and heading feedback adjust wheel commands, with output limits. Missing or invalid ranges request zero speed.
+`wall_following.py` tests a robot driving down a straight corridor. Each motor can run at a different fraction of the requested speed. Those wheel speeds update the robot's position and heading. The controller adjusts the commands using left/right wall distances and heading feedback. Missing or invalid feedback stops the wheel commands.
 
-The grid explorer does not use these physical positions. Connecting corridor dynamics to maze exploration would require cell-arrival detection, turn control, front-wall braking, and behavior changes at intersections.
+The maze explorer still moves one cell at a time. Connecting it to this model would need a way to detect arrival at a cell, control turns, stop for front walls, and handle intersections.
 
-## Verification and limits
+## Tests and limits
 
-`test_exploration.py` checks reciprocal wall storage, unknown passages, different initial headings, unreachable goals, and collision-free travel through seeded generated mazes. `test_wall_following.py` checks centering, unequal motors, command limits, and stop/resume behavior during sensor dropout.
+`test_exploration.py` checks wall storage in both directions, unseen passages, starting headings, empty mazes, unreachable goals, and travel through random mazes with a fixed seed. `test_wall_following.py` checks drift correction, wheel-speed limits, sensor dropout, simulation timing, and invalid settings.
 
-GitHub Actions runs the tests, executes the full demo, and checks that generated browser files match their source. These checks verify this simplified software model, not hardware performance.
+GitHub Actions runs the tests and full demo, then rebuilds the replay to check that the saved HTML matches the Python source and template.
 
-No physical robot results, ultrasonic noise model, wheel slip model, encoder integration, or Arduino firmware are included. The original project files are unavailable; this repository documents a reconstruction.
+These tests cover the simulation. There are no physical robot measurements, ultrasonic noise or wheel-slip models, encoder integration, or Arduino firmware here.
