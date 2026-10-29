@@ -10,6 +10,26 @@ permissions:
   contents: read
 
 jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test embedded map and planner
+        run: |
+          g++ -std=c++11 -Wall -Wextra -Werror -fsanitize=address,undefined firmware/tests/planner_test.cpp -o /tmp/planner_test
+          /tmp/planner_test
+      - name: Compare embedded and Python planners
+        run: |
+          g++ -std=c++11 -Wall -Wextra -Werror -fsanitize=address,undefined firmware/tests/planner_probe.cpp -o /tmp/planner_probe
+          python3 check_planner_parity.py /tmp/planner_probe
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Install Nano 33 BLE core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:mbed_nano@4.6.0
+      - name: Compile Nano 33 BLE sketch
+        run: arduino-cli compile --fqbn arduino:mbed_nano:nano33ble firmware/maze_robot
   simulation:
     runs-on: ubuntu-latest
     steps:
@@ -25,3 +45,7 @@ jobs:
         run: |
           python export_visual.py
           git diff --exit-code -- index.html visual_sim.html
+      - name: Verify controller experiment results
+        run: |
+          python controller_experiment.py
+          git diff --exit-code -- docs/controller-results.md

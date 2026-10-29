@@ -7,7 +7,7 @@ This runs separately from the maze explorer.
 import math
 
 
-def motor_commands(left_distance, right_distance, heading):
+def motor_commands(left_distance, right_distance, heading, kp=2.0, heading_gain=0.6):
     """Choose wheel speeds, or stop if a sensor reading is missing or invalid."""
     if any(
         value is None or not math.isfinite(value) or value < 0
@@ -17,9 +17,8 @@ def motor_commands(left_distance, right_distance, heading):
     if heading is None or not math.isfinite(heading):
         return 0.0, 0.0
     base_speed, max_speed = 0.12, 0.20
-    kp, kd = 2.0, 0.6
     error = right_distance - left_distance
-    correction = kp * error + kd * heading
+    correction = kp * error + heading_gain * heading
     return (
         max(0.0, min(max_speed, base_speed + correction)),
         max(0.0, min(max_speed, base_speed - correction)),
@@ -36,6 +35,8 @@ def simulate(
     corridor_width=0.30,
     robot_width=0.10,
     dropout_window=None,
+    kp=2.0,
+    heading_gain=0.6,
 ):
     for name, value in (
         ("duration", duration),
@@ -45,11 +46,15 @@ def simulate(
         ("initial_offset", initial_offset),
         ("corridor_width", corridor_width),
         ("robot_width", robot_width),
+        ("kp", kp),
+        ("heading_gain", heading_gain),
     ):
         if not math.isfinite(value):
             raise ValueError(f"{name} must be finite")
     if dt <= 0 or duration <= 0:
         raise ValueError("duration and dt must be positive")
+    if kp < 0 or heading_gain < 0:
+        raise ValueError("Controller gains must be nonnegative")
     if robot_width <= 0 or corridor_width <= robot_width:
         raise ValueError("Corridor width must exceed a positive robot width")
     wheelbase = 0.10
@@ -69,7 +74,7 @@ def simulate(
             left_distance = None
         if wall_following:
             left_command, right_command = motor_commands(
-                left_distance, right_distance, heading
+                left_distance, right_distance, heading, kp, heading_gain
             )
         else:
             left_command = right_command = base_speed

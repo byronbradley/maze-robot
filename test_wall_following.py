@@ -41,6 +41,8 @@ class WallFollowingTests(unittest.TestCase):
             "initial_offset",
             "corridor_width",
             "robot_width",
+            "kp",
+            "heading_gain",
         ):
             for value in (float("nan"), float("inf"), -float("inf")):
                 with self.subTest(name=name, value=value):
@@ -59,6 +61,8 @@ class WallFollowingTests(unittest.TestCase):
             {"dt": -0.01},
             {"duration": 0.0},
             {"duration": -1.0},
+            {"kp": -1.0},
+            {"heading_gain": -1.0},
         ):
             with self.subTest(settings=settings):
                 with self.assertRaises(ValueError):
@@ -78,6 +82,15 @@ class WallFollowingTests(unittest.TestCase):
         self.assertGreater(resumed["left_command"] + resumed["right_command"], 0)
         self.assertGreater(history[-1]["x"], resumed["x"])
         self.assertFalse(hit)
+
+    def test_configurable_gains_change_steering(self):
+        weak = motor_commands(0.14, 0.16, 0.0, kp=0.5)
+        strong = motor_commands(0.14, 0.16, 0.0, kp=2.0)
+        self.assertGreater(strong[0] - strong[1], weak[0] - weak[1])
+        no_feedback, hit = simulate(kp=0.0, heading_gain=0.0)
+        baseline, baseline_hit = simulate(False)
+        self.assertEqual(hit, baseline_hit)
+        self.assertEqual(no_feedback[-1]['offset'], baseline[-1]['offset'])
 
     def test_feedback_reduces_drift_and_avoids_contact(self):
         uncontrolled, hit = simulate(False)

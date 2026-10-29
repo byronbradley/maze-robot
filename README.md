@@ -1,63 +1,54 @@
 # Maze robot
 
-IEEE, University at Buffalo | Fall 2026.
+IEEE, University at Buffalo | Fall 2026
 
-[Open the replay](https://byronbradley.github.io/maze-robot/)
+[Open the replay](https://byronbradley.github.io/maze-robot/) · [Firmware](firmware/README.md) · [Wiring](hardware/wiring.md)
 
 [![Tests](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml/badge.svg)](https://github.com/byronbradley/maze-robot/actions/workflows/tests.yml)
 
 ![The robot's map beside the actual maze](docs/simulation-preview.png)
 
-This project simulates a robot exploring a maze and following corridor walls. The code has not been tested on a physical robot.
+Flood-fill maze navigation with a Python simulator, browser replay, and Nano 33 BLE firmware. The firmware controls two motors through a DRV8833 and reads three ultrasonic wall sensors.
 
-It includes a flood-fill planner, wall sensing, turn and forward commands, a browser replay, and a separate test of corridor following. [How the code fits together](docs/architecture.md) covers the files and their limits.
+## Run
 
-## Run it
-
-Use Python 3.12. No extra packages are needed.
+Python 3.12; no extra packages.
 
 ```sh
 python maze_sim.py
 python -m unittest discover -v
 ```
 
-The demo first solves the maze with the full map available. It then explores the same maze using wall readings and finishes with the corridor test.
+The demo compares a full-map route with exploration using front, left, and right wall readings, then runs a corridor-following experiment.
 
-## Maze exploration
+## Navigation
 
-The robot starts with the maze dimensions, outer boundary, starting position and heading, and goal coordinates. It reads walls in front, to the left, and to the right. Each reading updates the passage from both neighboring cells.
+The robot starts with its pose, maze dimensions, boundary, and goal. Wall observations update both sides of each passage. Flood-fill treats unseen passages as open when planning, but movement requires a confirmed opening. Distances are recalculated after sensing.
 
-The planner treats unseen passages as open. Before moving, the robot turns and checks that the next passage is clear. It recalculates distances after each reading and stops with an error if the goal is unreachable. Question marks in the final map show what it never saw.
+The Python explorer uses exact cell positions and wall readings. Its exploration route can be longer than the shortest route through the completed map.
 
-Positions, turns, and wall readings are exact in this model. There is no sensor noise, wheel slip, or motor feedback. The route found while exploring is not always the shortest route through the actual maze.
+## Replay
 
-## Browser replay
+Use the live link above or open `visual_sim.html`. Play, step, change speed, or drag the slider to compare the discovered map with the actual maze.
 
-Open `visual_sim.html` in a browser, or use the link above. You can play, pause, step, reset, change speed, and drag the slider through the run. The two panels show the robot's map and the actual maze. The robot only uses its own map.
-
-The replay uses frames recorded by the Python explorer. After changing the maze, explorer, or page template, rebuild it with:
+After changing the maze, explorer, or page template:
 
 ```sh
 python export_visual.py
 ```
 
-This writes `visual_sim.html` and `index.html` from `visual_template.html`. Both files work offline. GitHub's file viewer shows the HTML source, so download or clone the repo to open them locally.
+The exporter records the Python run and generates `index.html` for GitHub Pages and an identical `visual_sim.html` for offline viewing.
 
-## Corridor experiment
+## Corridor following
 
-Run `python wall_following.py` to compare driving with and without feedback. A 10 cm wide robot starts 3 cm left of center in a 30 cm corridor. Its left motor runs at 94% of the requested speed. The model updates position and heading, limits wheel speeds, and checks for side-wall contact.
+`python wall_following.py` compares feedback on and off in a 30 cm corridor. A 10 cm robot starts 3 cm left of center, with its left motor running at 94% of the requested speed. Side-distance and heading feedback correct drift. A second run drops a sensor reading for one second to exercise stop and recovery.
 
-The controller uses the difference between left and right wall distances to steer toward the center. Heading feedback reduces the back-and-forth motion. Commands are wheel speeds in meters per second. Real hardware would need a way to measure heading and convert those speeds to PWM.
+This model runs independently of grid navigation. It uses wheel speeds in m/s, ideal perpendicular wall ranges, and instantaneous stops.
 
-Missing or invalid distance or heading readings stop the wheel commands. The demo drops the left sensor for one second, then resumes when readings return. Stopping is instant in this model. The feedback-off run ignores sensor readings.
+[Controller experiments](docs/controller-results.md) compare nine gain combinations and check the defaults with both drift directions and sensor dropout. Reproduce the tables with `python controller_experiment.py`.
 
-This test runs separately from maze navigation. It leaves out intersections, range noise, wheel slip, motor response delays, and braking distance. Wall distances are measured perpendicular to the corridor, rather than along a turned sensor's beam.
+## Firmware
 
-## Still to do
+The [Arduino sketch](firmware/README.md) includes an 8×8 map, interrupt-based echo capture, PWM motor control, and sensing/turning/driving states. Movement uses configurable cell and turn durations. See the firmware guide for calibration, serial commands, and build instructions.
 
-- Connect maze navigation to movement feedback and controlled turns.
-- Verify the firmware, wiring, sensors, and motor driver on real hardware.
-- Measure wheel speed, stopping distance, and sensor errors.
-- Test the robot in a physical maze and save the results.
-
-Possible parts include an Arduino Nano 33 BLE, a DRV8833 driver, two geared DC motors, wall-distance sensors, a chassis, and a battery. This is a parts plan; the assembly and electrical compatibility have not been checked here.
+[Architecture and tests](docs/architecture.md) covers the modules and automated checks. [Design decisions](docs/design-decisions.md) explains the planning and control choices.

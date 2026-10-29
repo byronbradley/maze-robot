@@ -1,31 +1,31 @@
-# How the code fits together
+# Architecture
 
-## Navigation
+## Python navigation
 
-`maze_sim.py` holds the example maze. It first solves it with the full map, then runs the explorer with only wall readings. The explorer lives in `exploration.py`:
+- `maze_sim.py`: example maze, known-map reference route, movement commands, and demo entry point.
+- `exploration.py`: `SimulatedWorld` supplies wall readings; `DiscoveredMap` stores reciprocal edges; `explore()` senses, recalculates distances, turns, and advances.
+- `wall_following.py`: differential-drive corridor model with unequal motor gains, side-distance/heading feedback, and sensor dropout.
 
-- `SimulatedWorld` reads the actual maze and returns front, left, and right wall readings. It blocks moves into walls.
-- `DiscoveredMap` stores what the robot has seen. It starts with the maze dimensions and outer boundary. Each wall reading updates both sides of a passage.
-- `explore()` records readings, recalculates distances, and picks a turn or forward move. After turning, it checks the sensors again before moving.
-
-Planning treats unknown passages as open, but the robot must check before entering one. The starting position, heading, and goal are supplied. Position and wall readings are exact.
+The grid explorer uses exact cells and readings. The corridor model updates continuous position and heading separately; it is not the grid robot's movement engine.
 
 ## Browser replay
 
-`export_visual.py` records the explorer's readings and maps, then puts those frames into `visual_template.html`. It writes the same page to `index.html` and `visual_sim.html`. GitHub Pages serves `index.html`; either file can be opened offline.
+`export_visual.py` records observations and discovered maps from the Python explorer. It inserts the frames into `visual_template.html` to generate `index.html` and `visual_sim.html`.
 
-The browser plays back that recording. Changing playback speed only changes how fast frames appear. The actual-maze panel lets the viewer compare maps; the planner cannot read it.
+Playback controls change frame timing. The actual-maze panel is an observer view; navigation uses only discovered edges.
 
-## Corridor feedback
+## Arduino
 
-`wall_following.py` tests a robot driving down a straight corridor. Each motor can run at a different fraction of the requested speed. Those wheel speeds update the robot's position and heading. The controller adjusts the commands using left/right wall distances and heading feedback. Missing or invalid feedback stops the wheel commands.
+`firmware/maze_robot/Planner.h` stores an 8×8 map and calculates flood-fill distances using a fixed-size queue. The sketch captures ultrasonic echo edges with interrupts, schedules sensors sequentially, and drives the DRV8833 with signed PWM commands.
 
-The maze explorer still moves one cell at a time. Connecting it to this model would need a way to detect arrival at a cell, control turns, stop for front walls, and handle intersections.
+States are idle, settle, sense, turn, drive, goal, and fault. Turns and cell moves use calibrated durations; timer completion updates the stored pose. Side-distance error corrects steering when both side walls are present. A held run button enables motion; sensor loss, insufficient front clearance, serial stop, or a driver fault disables it.
 
-## Tests and limits
+## Checks
 
-`test_exploration.py` checks wall storage in both directions, unseen passages, starting headings, empty mazes, unreachable goals, and travel through random mazes with a fixed seed. `test_wall_following.py` checks drift correction, wheel-speed limits, sensor dropout, simulation timing, and invalid settings.
+`check_planner_parity.py` sends 200 seeded partial maps to a compiled C++ probe and compares its next-direction decisions with the Python map planner. Both use the same tie-break: continue straight when possible, otherwise north/east/south/west. Map coordinates differ by the Python representation's one-cell outer border; the check translates them explicitly.
 
-GitHub Actions runs the tests and full demo, then rebuilds the replay to check that the saved HTML matches the Python source and template.
+`controller_experiment.py` records final centering error, wall contact, and time to remain within 5 mm of center. It varies distance and heading-feedback gains, then checks both offset directions, motor mismatches, and sensor dropout. Results are saved in [controller-results.md](controller-results.md) and reproduced in CI.
 
-These tests cover the simulation. There are no physical robot measurements, ultrasonic noise or wheel-slip models, encoder integration, or Arduino firmware here.
+- Python tests: reciprocal walls, unknown passages, initial headings, empty/unreachable mazes, seeded random mazes, drift correction, command limits, sensor dropout, timing, and invalid settings.
+- C++ planner checks: boundaries, reciprocal walls, confirmed openings, an enclosed start, reset, and an open-grid route to the goal.
+- GitHub Actions: runs both test sets, executes the Python demo, checks generated replay files, and compiles the sketch for Nano 33 BLE. C++ planner checks use address and undefined-behavior sanitizers.
