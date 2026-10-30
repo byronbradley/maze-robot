@@ -24,6 +24,13 @@ States are idle, settle, sense, turn, drive, goal, and fault. Turns and cell mov
 
 `check_planner_parity.py` sends 200 seeded partial maps to a compiled C++ probe and compares its next-direction decisions with the Python map planner. Both use the same tie-break: continue straight when possible, otherwise north/east/south/west. Map coordinates differ by the Python representation's one-cell outer border; the check translates them explicitly.
 
+To reproduce the cross-language check on a system with Python and g++:
+
+```sh
+g++ -std=c++11 -Wall -Wextra -Werror firmware/tests/planner_probe.cpp -o planner_probe
+python check_planner_parity.py ./planner_probe
+```
+
 `controller_experiment.py` records final centering error, wall contact, and time to remain within 5 mm of center. It varies distance and heading-feedback gains, then checks both offset directions, motor mismatches, and sensor dropout. Results are saved in [controller-results.md](controller-results.md) and reproduced in CI.
 
 - Python tests: reciprocal walls, unknown passages, initial headings, empty/unreachable mazes, seeded random mazes, drift correction, command limits, sensor dropout, timing, and invalid settings.

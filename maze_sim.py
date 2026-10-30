@@ -1,7 +1,7 @@
 """Run the maze planner and corridor demo with python maze_sim.py.
 
 The maze uses exact cell positions and wall readings. The corridor demo
-models motor drift separately. Neither runs on physical hardware.
+models motor drift separately.
 """
 
 from collections import deque
@@ -134,7 +134,6 @@ def main():
     print("\nPLANNED MOVEMENT COMMANDS (starting heading: east)")
     for number, command in enumerate(movement_commands(route), start=1):
         print(f"{number:2}. {command}")
-    print("\nThese are simulated commands, not verified physical movements.")
     print("\nUNKNOWN-MAZE EXPLORATION (only dimensions and goal initially known)")
     explored_route, log, discovered = explore(SimulatedWorld(MAZE), start, goal)
     print("\n".join(log))
