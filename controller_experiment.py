@@ -55,7 +55,7 @@ def report():
               'additional operating conditions before choosing a replacement.', '',
               'This model has ideal wall ranges, direct wheel-speed response, and no slip. '
               'Its gain values cannot be copied into the firmware, where commands are PWM duty '
-              'and there is no heading-feedback sensor.', '']
+              'and the firmware does not use heading feedback.', '']
     return '\n'.join(lines)
 
 

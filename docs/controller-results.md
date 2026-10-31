@@ -38,4 +38,4 @@ The defaults remain kp=2.0 and heading_gain=0.6. The following cases test both o
 
 Compare the no-heading-feedback rows with the damped rows to see the effect on settling. Larger distance gain produces a stronger correction and earlier command saturation; larger heading gain can slow the return to center. The existing defaults are retained for comparison. The faster alternatives in this table need comparison across additional operating conditions before choosing a replacement.
 
-This model has ideal wall ranges, direct wheel-speed response, and no slip. Its gain values cannot be copied into the firmware, where commands are PWM duty and there is no heading-feedback sensor.
+This model has ideal wall ranges, direct wheel-speed response, and no slip. Its gain values cannot be copied into the firmware, where commands are PWM duty and the firmware does not use heading feedback.

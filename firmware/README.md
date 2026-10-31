@@ -1,7 +1,7 @@
 # Nano 33 BLE firmware
 
-The sketch is compiled in CI. The physical build and bench testing are planned;
-the motion constants still need measurement on the assembled robot.
+GitHub Actions compiles this sketch for the Nano 33 BLE. I haven't tested it on
+the assembled robot yet; the movement timings need to be measured before use.
 
 Open `maze_robot/maze_robot.ino` with **Arduino Nano 33 BLE** selected. The sketch uses a DRV8833 carrier, two DC motors, and three HC-SR04P sensors powered at 3.3 V. The selected controller is Nano 33 BLE Sense Rev2 (ABX00070); its onboard sensors are not used. [Wiring and pin assignments](../hardware/wiring.md).
 

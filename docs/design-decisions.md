@@ -1,29 +1,29 @@
-# Design decisions
+# Design notes
 
 ## Flood-fill rather than a fixed route
 
-The robot discovers walls during exploration, so a route calculated before sensing can become blocked. Breadth-first search from the goal gives every reachable cell a move count. Recalculating after observations is inexpensive on an 8×8 grid and avoids storing routes that immediately become stale.
+I used flood-fill because the robot learns where the walls are as it moves. A fixed route can lead into a wall it hasn't seen yet. Breadth-first search from the goal gives each reachable cell a move count, and the 8×8 grid is small enough to recalculate after each set of readings.
 
-Unknown passages remain open in the planning graph to encourage exploration. The motion layer requires a confirmed opening before driving. This separates a tentative route from permission to move.
+The planner treats unknown passages as open so it can explore. Before driving into one, the robot needs a reading that confirms it is open.
 
-## Reciprocal edges
+## Recording a wall from both sides
 
-A wall belongs to both adjacent cells. Recording east of one cell also records west of the next. The planner tests this invariant because inconsistent edges can make a route appear passable in only one direction.
+A wall belongs to both adjacent cells. Recording a wall east of one cell also records it west of the next. The tests check both sides; otherwise, a passage could look open from one direction and closed from the other.
 
-## Straight-first tie-breaking
+## Choosing between equal routes
 
-Equal-distance choices prefer the current heading to avoid an unnecessary turn. Remaining ties use north/east/south/west so runs are deterministic. The Python/C++ parity check verifies the shared rule on partial maps, including unreachable states.
+When two moves have the same distance to the goal, the planner prefers to keep going straight. Remaining ties use north/east/south/west, so repeated runs make the same choice. The Python/C++ comparison checks this rule on partial maps, including cases with no route to the goal.
 
 ## Controller terms
 
 Distance error is right range minus left range. A positive error means the robot is nearer the left wall, so the controller increases left-wheel demand and decreases right-wheel demand. Heading feedback damps the resulting turn. It is state feedback, not a full PID controller.
 
-The [gain comparison](controller-results.md) shows why a final error alone is insufficient: some gains finish near center but oscillate until late in the run. The report also records settling time and wall contact. Simulation wheel-speed gains and firmware PWM gains have different units and are configured independently.
+Some gains finish near the center but oscillate for much of the run. That's why the [gain comparison](controller-results.md) records settling time and wall contact as well as final error. The simulation controls wheel speed and the firmware controls PWM duty, so their gains have different units and separate settings.
 
-## Explicit stop and reset
+## Stopping after a fault
 
-A missing echo is ambiguous, so the firmware stops rather than treating it as free space. Interrupted motion can leave the chassis between mapped cells. A latched fault therefore requires returning to the starting pose and resetting, rather than resuming from a guessed cell.
+A missing echo could mean open space or a failed reading. The firmware stops because it can't tell which. A stop halfway through a move also leaves the stored cell position unreliable. After a latched fault, the robot must be returned to its starting cell and heading before resetting.
 
-## Why timed firmware movement
+## Timed movement
 
-The pin map allocates signals to three ultrasonic sensors and the motor driver. The current motion interface uses one-cell and quarter-turn durations; encoder arrival detection can replace those timers without changing flood-fill. Timing is sensitive to battery voltage, load, and wheel slip, which is why calibration belongs in the firmware configuration rather than the route planner.
+The firmware uses timers for one-cell moves and quarter turns. I still need to measure those timings on the assembled robot. Motion is disabled until calibration is enabled. Timing can vary with battery voltage, load, and wheel slip. Encoder feedback could replace the timers later without changing the flood-fill planner.
