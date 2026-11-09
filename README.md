@@ -14,13 +14,19 @@ From the project folder, with the virtual environment activated:
 python software/main.py
 ```
 
+## Run maze exploration
+
+The robot starts with an unknown map, senses nearby squares, and
+backtracks to explore other branches. It then finds and follows a
+route to the goal using the map it discovered.
+
+```bash
+python software/exploration.py
+```
+
 ## Run the tests
 
 ```bash
 python software/test_movement.py
 ```
 
-## Run the browser simulation
-
-Open `web/index.html` in a browser. No server or installation is needed.
-The webpage uses a JavaScript version of the maze solver.
