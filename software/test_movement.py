@@ -1,6 +1,9 @@
 from main import (robot_maze, is_open, move_right, move_left, move_down, move_up, get_neighbors, find_path,
                   get_direction, path_to_directions, get_turn, directions_to_commands, apply_turn, move_forward,
                   follow_commands)
+
+from exploration import sense_neighbors, update_known_maze
+
 def check_movement():
     assert move_down(robot_maze, 0, 1) == 1
     assert move_down(robot_maze,0,0) == 0
@@ -92,9 +95,7 @@ def check_movement():
     directions = path_to_directions(path)
     commands = directions_to_commands(directions, heading)
 
-    position, heading = follow_commands(
-        robot_maze, (0, 0), heading, commands)
-
+    position, heading = follow_commands(robot_maze, (0, 0), heading, commands)
     assert position == (4, 4)
     assert heading == "down"
 
@@ -104,12 +105,10 @@ def check_movement():
         [0, 0, 0],]
     assert find_path(two_routes_maze, (0, 0), (0, 2)) == [
         (0, 0), (0, 1), (0, 2)]
-
     two_routes_maze[0][1] = 1
     assert find_path(two_routes_maze, (0, 0), (0, 2)) == [
         (0, 0), (1, 0), (2, 0), (2, 1),
         (2, 2), (1, 2), (0, 2)]
-
     two_routes_maze[1][0] = 1
     assert find_path(two_routes_maze, (0, 0), (0, 2)) == []
 
@@ -122,12 +121,20 @@ def check_movement():
     assert heading == "down"
 
     position, heading = follow_commands(
-        robot_maze,
-        (0, 0),
-        "right",
-        [("right", "forward"), ("left", "forward")])
+        robot_maze, (0, 0), "right", [])
     assert position == (0, 0)
-    assert heading == "down"
+    assert heading == "right"
+
+    assert sense_neighbors(robot_maze, 0, 0) == {
+        (0, 1): 0,
+        (1, 0): 1,}
+
+    maze = [[0, 0, 1]]
+    known = [[0, None, None]]
+    update_known_maze(maze, known, 0, 0)
+    assert known == [[0, 0, None]]
+    update_known_maze(maze, known, 0, 1)
+    assert known == [[0, 0, 1]]
 
     print("All movement tests passed.")
 
