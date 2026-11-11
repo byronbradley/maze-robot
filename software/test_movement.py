@@ -4,6 +4,8 @@ from main import (robot_maze, is_open, move_right, move_left, move_down, move_up
 
 from exploration import sense_neighbors, update_known_maze
 
+from maze_generator import generate_maze
+
 def check_movement():
     assert move_down(robot_maze, 0, 1) == 1
     assert move_down(robot_maze,0,0) == 0
@@ -135,6 +137,13 @@ def check_movement():
     assert known == [[0, 0, None]]
     update_known_maze(maze, known, 0, 1)
     assert known == [[0, 0, 1]]
+
+    maze = generate_maze()
+    assert len(maze) == 5
+    assert all(len(row) == 5 for row in maze)
+    assert all(cell in (0, 1) for row in maze for cell in row)
+    assert maze[0][0] == 0
+    assert maze[4][4] == 0
 
     print("All movement tests passed.")
 

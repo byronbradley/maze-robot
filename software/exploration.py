@@ -1,5 +1,7 @@
-from main import (robot_maze, get_neighbors, find_path, path_to_directions, directions_to_commands,
+from main import (get_neighbors, find_path, path_to_directions, directions_to_commands,
                   follow_commands, get_direction)
+
+from maze_generator import generate_maze
 
 def sense_neighbors(maze, row, column):
     neighbors = [
@@ -22,6 +24,7 @@ def update_known_maze(maze, known_maze, row, column):
         known_maze[next_row][next_column] = cell
 
 def main():
+    robot_maze = generate_maze()
     known_maze = [
         [None for column in row]
         for row in robot_maze]
